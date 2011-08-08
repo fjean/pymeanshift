@@ -17,7 +17,7 @@
  *
  */
 
-#include <cv.h>
+#include <opencv/cv.h>
 
 #ifndef PYMEANSHIFT_HPP
 #define PYMEANSHIFT_HPP

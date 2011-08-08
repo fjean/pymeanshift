@@ -4,3 +4,4 @@ include *.hpp
 include MSReadme.txt
 include COPYING
 include MANIFEST.in
+include ChangeLog
