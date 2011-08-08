@@ -1,0 +1,17 @@
+2011-08-07  Frederic Jean  <googlecode@fredericjean.ca>
+
+    * setup.py: Added code for detecting which OpenCV import library files to
+    link to on Windows. Also changed version for 0.1.1.
+
+    * setup.cfg: Commented the include dir and the library dir variables
+
+    * pymeanshift.hpp: Include "opencv/cv.h" instead of "cv.h"
+
+    * MANIFEST.in: Include ChangeLog
+
+    * ChangeLog: Added this file.
+
+
+2011-07-24  Frederic Jean  <googlecode@fredericjean.ca>
+
+    * (All files): Initial import. This is version 0.1.0.
