@@ -1,6 +1,4 @@
-include pymeanshift.i
 include *.h
-include *.hpp
 include MSReadme.txt
 include COPYING
 include MANIFEST.in
