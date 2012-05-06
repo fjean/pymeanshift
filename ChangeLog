@@ -1,4 +1,4 @@
-2011-08-07  Frederic Jean  <googlecode@fredericjean.ca>
+2012-05-05  Frederic Jean  <googlecode@fredericjean.ca>
 
     * Version 0.2.0: OpenCV is no more required; Numpy arrays are used instead
 
