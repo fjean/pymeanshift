@@ -16,43 +16,144 @@
 #  along with PyMeanShift.  If not, see <http://www.gnu.org/licenses/>.
 # 
 
-import numpy as np
 import _pymeanshift
 
 '''
-Python Extension for Mean Shift Image Segmentation
+Python Extension for Mean Shift Image Segmentation (PyMeanShift)
      
 The mean shift algorithm and its implementation in C++ are by
-Chris M. Christoudias and Bogdan Georgescu. This Python module provides the "glue"
-that is necessary in order to use the C++ implementation with OpenCV in Python.
-
+Chris M. Christoudias and Bogdan Georgescu. The PyMeanShift extension
+provides a Python interface  to the meanshift C++ implementation
+using Numpy arrays.
+    
 For details on the algorithm:
 D. Comanicu, P. Meer: "Mean shift: A robust approach toward feature space analysis".
 IEEE Transactions on Pattern Analysis and Machine Intelligence, May 2002.
   
 '''
 
-# Define segment function alias from the extension
-segment = _pymeanshift.segment
 
-# Backward compatibility with PyMeanShift 0.1.x
-def segmentMeanShift(inputImage, sigmaS=6, sigmaR=4.5, minRegion=300, speedUpLevel=2):
-  '''
-  Segmentation of an image (grayscale or color) using the mean shift algorithm.
-  
-  WARNING: This function might be removed from future version of PyMeanShift.
-           Please use the "segment" function or the MeanShiftSegmenter class.
-  
-  Return a 3-tuple (colorLabelsImage, labelsImg, nbRegions).
-    - colorLabelsImage is the segmented image with each region colored as the
-      mean color value of its pixels.
-    - labelsImg is an image where a pixel value represents the region it belongs to.
-      This image is one channel, 32 bits per pixel.
-    - nbRegions is the number of regions found in the image.  
-  '''  
-  return segment(inputImage, sigmaS, sigmaR, minRegion, speedUpLevel)
+SPEEDUP_NO = _pymeanshift.SPEEDUP_NO
+SPEEDUP_MEDIUM = _pymeanshift.SPEEDUP_MEDIUM
+SPEEDUP_HIGH = _pymeanshift.SPEEDUP_HIGH    
 
 
+def segment(image, spatial_radius, range_radius, min_density, speedup_level=SPEEDUP_HIGH):
+    '''
+    Segment the input image (color or grayscale).
+    
+    Keyword arguments:
+    image -- Input image (2-D or 3-D numpy array or compatible).
+    spatial_radius -- Spatial radius of the search window (integer).
+    range_radius -- Range radius of the search window (float).
+    min_density -- The minimum point density of a region in the segmented
+                   image (integer).    
+    speedup_level -- Filtering optimization level for fast execution
+                     (default: high). See SpeedUpLevel.
+    
+    Return value: tuple (segmented, labels, nb_regions)
+    segmented -- Image (Numpy array) where the color (or grayscale) of the
+                 regions is the mean value of the pixels belonging to a region.
+    labels -- Image (2-D Numpy array, 16 unsigned bits per element) where a
+              pixel value correspond to the region number the pixel belongs to.
+    nb_regions -- The number of regions found by the mean shift algorithm.
+    
+    NOTES: To avoid unnecessary image conversions when the function is called,
+    make sure the input image array is 8 unsigned bits per pixel and is
+    contiguous in memory.    
+    
+    '''        
+    return _pymeanshift.segment(image, spatial_radius, range_radius, min_density, speedup_level)
+    
 
+class Segmenter(object):
+    '''
+    Segmenter class using the mean shift algorithm to segment image
+    '''
+    _spatial_radius = None
+    _range_radius = None
+    _min_density = None
+    _speedup_level = None
+    
+    def __init__(self, spatial_radius, range_radius, min_density, speedup_level=SPEEDUP_HIGH):
+        '''
+        Segmenter init function. See function segment for keywords description.
+        '''
+        self.spatial_radius = spatial_radius
+        self.range_radius = range_radius
+        self.min_density = min_density
+        self.speedup_level = speedup_level
+        
+    def __call__(self, image):
+        '''
+        Segment the input image (color or grayscale).
+        
+        Keyword arguments:
+            image -- Input image (2-D or 3-D numpy array or compatible).
+            
+        Return value: tuple (segmented, labels, nb_regions)
+        segmented -- Image (Numpy array) where the color (or grayscale) of the
+                     regions is the mean value of the pixels belonging to a region.
+        labels -- Image (2-D Numpy array, 16 unsigned bits per element) where a
+                  pixel value correspond to the region number the pixel belongs to.
+        nb_regions -- The number of regions found by the mean shift algorithm.
+    
+        NOTES: To avoid unnecessary image conversions when the function is called,
+        make sure the input image array is 8 unsigned bits per pixel and is
+        contiguous in memory.    
+            
+        '''        
+        return _pymeanshift.segment(image, _spatial_radius, _range_radius, _min_density, _speedup_level)
+        
+        
+    @property
+    def spatial_radius(self):
+        '''
+        Spatial radius of the search window
+        '''
+        return self._spatial_radius
+        
+    @spatial_radius.setter
+    def spatial_radius(self, value):
+        if value < 0:
+            raise AttributeError("Spatial radius must be greater or equal to zero")
+        _spatial_radius = value
+        
+    @property
+    def range_radius(self):
+        '''
+        Range radius of the search window
+        '''
+        return self._range_radius
+            
+    @range_radius.setter
+    def range_radius(self, value):
+        if value < 0:
+            raise AttributeError("Range radius must be greater or equal to zero")
+        self._range_radius = value
 
+    @property
+    def min_density(self):
+        '''
+        The minimum point density of a region in the segmented image
+        '''
+        return self._min_density
+        
+    @min_density.setter
+    def min_density(self, value):
+        if value <= 0:
+            raise AttributeError("Minimum density must be greater than zero")
+        self._min_density = value
 
+    @property
+    def speedup_level(self):
+        '''
+        Filtering optimization level for fast execution
+        '''
+        return self._speedup_level
+        
+    @speedup_level.setter
+    def speedup_level(self, value):
+        if value != SPEEDUP_NO and value != SPEEDUP_MEDIUM and value != SPEEDUP_HIGH:
+            raise AttributeError("Speedup level must be 0 (no speedup), 1 (medium speedup), or 2 (high speedup)")
+        self._speedup_level = value

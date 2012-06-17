@@ -1,6 +1,6 @@
 /*
  *  Python Module for Mean Shift Image Segmentation (PyMeanShift)
- *  Copyright (C) 2011 by Frederic Jean
+ *  Copyright (C) 2012 by Frederic Jean
  *
  *  PyMeanShift is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published
@@ -23,18 +23,36 @@
 
 #include "msImageProcessor.h"
 
-extern "C" // Needed since this is compiled with a c++ compiler
+extern "C" // Needed since this is compiled with a C++ compiler
 {  
 
   // Module doc
   static char pmsDoc[] = \
     "Python Extension for Mean Shift Image Segmentation (PyMeanShift)\n\
-     \n\
-     ";
+    \n\
+    The mean shift algorithm and its implementation in C++ are by \n\
+    Chris M. Christoudias and Bogdan Georgescu. The PyMeanShift extension \n\
+    provides a Python interface  to the meanshift C++ implementation \n\
+    using Numpy arrays.\n\
+    \n\
+    For details on the algorithm: \n\
+    D. Comanicu, P. Meer. Mean shift: A robust approach toward feature space analysis.\n\
+    IEEE Transactions on Pattern Analysis and Machine Intelligence, May 2002.\n\    
+    \n\
+    ";
 
   // Segment image function doc
   static char pmsSegmentDoc[] = \
-    "\n\
+    "Segment a color and gray scale image using the mean shift algorithm.\n\
+     \n\
+     NOTE: This function is not intended to be used directly; use the segment \n\
+     function in the PyMeanShift wrapper module instead. \n\
+     \n\
+     Argument 1 -- The image to segment as a Numpy array (or compatible)\n\
+     Argument 2 -- The spatial radius of the search window (integer)\n\
+     Argument 3 -- The range radius of the search window (double)\n\
+     Argument 4 -- The minimum point density of a region in the segmented image (integer)\n\
+     Argument 5 -- The speed up level (integer, 0: NO; 1: MEDIUM; 2: HIGH)\n\
      \n\
      ";
   
@@ -45,9 +63,9 @@ extern "C" // Needed since this is compiled with a c++ compiler
     PyObject* inputImage = NULL;
     PyArrayObject* segmentedImage = NULL;
     PyArrayObject* labelImage = NULL;
-    int sigmaS[1];
-    double sigmaR[1];
-    unsigned int minRegion[1];
+    int radiusS[1];
+    double radiusR[1];
+    unsigned int minDensity[1];
     unsigned int speedUp[1] = { HIGH_SPEEDUP };
     
     
@@ -60,19 +78,25 @@ extern "C" // Needed since this is compiled with a c++ compiler
     int dimensions[3];
     int nbDimensions;
     
-    if (!PyArg_ParseTuple(args, "OidI|I", &array, &sigmaS, &sigmaR, &minRegion, &speedUp))
+    if (!PyArg_ParseTuple(args, "OidI|I", &array, &radiusS, &radiusR, &minDensity, &speedUp))
       return NULL;
     
-    if(sigmaS[0] < 0)
+    if(radiusS[0] < 0)
     {
       PyErr_SetString(PyExc_ValueError, "Spatial radius must be greater or equal to zero");
       return NULL;
     }
 
-    if(sigmaR[0] < 0.)
+    if(radiusR[0] < 0.)
     {
       PyErr_SetString(PyExc_ValueError, "Range radius must be greater or equal to zero");
       return NULL;
+    }
+
+    if(minDensity[0] <= 0)
+    {
+        PyErr_SetString(PyExc_ValueError, "Minimum density must be greater than zero");
+        return NULL;
     }
     
     if(speedUp[0] > 2)
@@ -136,7 +160,7 @@ extern "C" // Needed since this is compiled with a c++ compiler
     }
     
     // Segment image and get segmented image
-    imageSegmenter.Segment(sigmaS[0], sigmaR[0], minRegion[0], speedUpLevel);
+    imageSegmenter.Segment(radiusS[0], radiusR[0], minDensity[0], speedUpLevel);
     imageSegmenter.GetResults((unsigned char*)PyArray_DATA(segmentedImage));
     
     // Get labels images and number of regions
@@ -162,7 +186,10 @@ extern "C" // Needed since this is compiled with a c++ compiler
   // Module initialization function
   PyMODINIT_FUNC init_pymeanshift()
   {
-    Py_InitModule3("_pymeanshift", pmsMethods, pmsDoc);
+    PyObject* modulePMS = Py_InitModule3("_pymeanshift", pmsMethods, pmsDoc);
+    PyModule_AddIntConstant(modulePMS, "SPEEDUP_NO", NO_SPEEDUP);
+    PyModule_AddIntConstant(modulePMS, "SPEEDUP_MEDIUM", MED_SPEEDUP);
+    PyModule_AddIntConstant(modulePMS, "SPEEDUP_HIGH", HIGH_SPEEDUP);
     import_array();
   }  
   
