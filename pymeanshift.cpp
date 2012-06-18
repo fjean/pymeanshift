@@ -48,11 +48,19 @@ extern "C" // Needed since this is compiled with a C++ compiler
      NOTE: This function is not intended to be used directly; use the segment \n\
      function in the PyMeanShift wrapper module instead. \n\
      \n\
+     Arguments:\n\
      Argument 1 -- The image to segment as a Numpy array (or compatible)\n\
      Argument 2 -- The spatial radius of the search window (integer)\n\
      Argument 3 -- The range radius of the search window (double)\n\
      Argument 4 -- The minimum point density of a region in the segmented image (integer)\n\
      Argument 5 -- The speed up level (integer, 0: NO; 1: MEDIUM; 2: HIGH)\n\
+     \n\
+     Return value: 3-tuple\n\
+     Element 1 -- Image (Numpy array) where the color (or grayscale) of the\n\
+                  regions is the mean value of the pixels belonging to a region.\n\
+     Element 2 -- Image (2-D Numpy array, 32 unsigned bits per element) where a\n\
+                  pixel value correspond to the region number the pixel belongs to.\n\
+     Element 3 -- The number of regions found by the mean shift algorithm.\n\     
      \n\
      ";
   
@@ -93,9 +101,9 @@ extern "C" // Needed since this is compiled with a C++ compiler
       return NULL;
     }
 
-    if(minDensity[0] <= 0)
+    if(minDensity[0] < 0)
     {
-        PyErr_SetString(PyExc_ValueError, "Minimum density must be greater than zero");
+        PyErr_SetString(PyExc_ValueError, "Minimum density must be greater or equal to zero");
         return NULL;
     }
     
