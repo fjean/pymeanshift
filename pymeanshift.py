@@ -54,7 +54,7 @@ def segment(image, spatial_radius, range_radius, min_density, speedup_level=SPEE
     Return value: tuple (segmented, labels, nb_regions)
     segmented -- Image (Numpy array) where the color (or grayscale) of the
                  regions is the mean value of the pixels belonging to a region.
-    labels -- Image (2-D Numpy array, 16 unsigned bits per element) where a
+    labels -- Image (2-D Numpy array, 32 unsigned bits per element) where a
               pixel value correspond to the region number the pixel belongs to.
     nb_regions -- The number of regions found by the mean shift algorithm.
     
@@ -75,13 +75,16 @@ class Segmenter(object):
     _min_density = None
     _speedup_level = None
     
-    def __init__(self, spatial_radius, range_radius, min_density, speedup_level=SPEEDUP_HIGH):
+    def __init__(self, spatial_radius=None, range_radius=None, min_density=None, speedup_level=SPEEDUP_HIGH):
         '''
         Segmenter init function. See function segment for keywords description.
         '''
-        self.spatial_radius = spatial_radius
-        self.range_radius = range_radius
-        self.min_density = min_density
+        if spatial_radius is not None:
+            self.spatial_radius = spatial_radius
+        if range_radius is not None:
+            self.range_radius = range_radius
+        if min_density is not None:            
+            self.min_density = min_density
         self.speedup_level = speedup_level
         
     def __call__(self, image):
@@ -94,7 +97,7 @@ class Segmenter(object):
         Return value: tuple (segmented, labels, nb_regions)
         segmented -- Image (Numpy array) where the color (or grayscale) of the
                      regions is the mean value of the pixels belonging to a region.
-        labels -- Image (2-D Numpy array, 16 unsigned bits per element) where a
+        labels -- Image (2-D Numpy array, 32 unsigned bits per element) where a
                   pixel value correspond to the region number the pixel belongs to.
         nb_regions -- The number of regions found by the mean shift algorithm.
     
@@ -102,10 +105,30 @@ class Segmenter(object):
         make sure the input image array is 8 unsigned bits per pixel and is
         contiguous in memory.    
             
-        '''        
-        return _pymeanshift.segment(image, _spatial_radius, _range_radius, _min_density, _speedup_level)
+        '''
+        if self._spatial_radius is None:
+            raise ValueError("Spatial radius has not been set")
+        if self._range_radius is None:
+            raise ValueError("Range radius has not been set")
+        if self._min_density is None:
+            raise ValueError("Minimum density has not been set")        
         
-        
+        return _pymeanshift.segment(image, self._spatial_radius, self._range_radius, self._min_density, self._speedup_level)
+                
+    def __str__(self):
+        return "<Segmenter: spatial_radius={}, range_radius={}, min_density={}, speedup_level={}>".format(
+                self._spatial_radius,
+                self._range_radius,
+                self._min_density,
+                self._speedup_level)
+
+    def __repr__(self):
+        return "Segmenter(spatial_radius={}, range_radius={}, min_density={}, speedup_level={})".format(
+                self._spatial_radius,
+                self._range_radius,
+                self._min_density,
+                self._speedup_level)
+
     @property
     def spatial_radius(self):
         '''
@@ -117,7 +140,7 @@ class Segmenter(object):
     def spatial_radius(self, value):
         if value < 0:
             raise AttributeError("Spatial radius must be greater or equal to zero")
-        _spatial_radius = value
+        self._spatial_radius = value
         
     @property
     def range_radius(self):
@@ -141,8 +164,8 @@ class Segmenter(object):
         
     @min_density.setter
     def min_density(self, value):
-        if value <= 0:
-            raise AttributeError("Minimum density must be greater than zero")
+        if value < 0:
+            raise AttributeError("Minimum density must be greater or equal to zero")
         self._min_density = value
 
     @property
