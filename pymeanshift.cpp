@@ -37,7 +37,7 @@ extern "C" // Needed since this is compiled with a C++ compiler
     \n\
     For details on the algorithm: \n\
     D. Comanicu, P. Meer. Mean shift: A robust approach toward feature space analysis.\n\
-    IEEE Transactions on Pattern Analysis and Machine Intelligence, May 2002.\n\    
+    IEEE Transactions on Pattern Analysis and Machine Intelligence, May 2002.\n\
     \n\
     ";
 
@@ -60,7 +60,7 @@ extern "C" // Needed since this is compiled with a C++ compiler
                   regions is the mean value of the pixels belonging to a region.\n\
      Element 2 -- Image (2-D Numpy array, 32 unsigned bits per element) where a\n\
                   pixel value correspond to the region number the pixel belongs to.\n\
-     Element 3 -- The number of regions found by the mean shift algorithm.\n\     
+     Element 3 -- The number of regions found by the mean shift algorithm.\n\
      \n\
      ";
   
