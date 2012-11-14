@@ -67,7 +67,6 @@ setup(name='pymeanshift',
                    'Programming Language :: C++',
                    'Programming Language :: Python :: 2.7',
                    'Programming Language :: Python :: 3.2',
-                   'Programming Language :: Python :: Implementation :: CPython',                   
                    'Topic :: Scientific/Engineering :: Image Recognition'                 
                   ]                  
      )
