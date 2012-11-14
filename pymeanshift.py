@@ -18,6 +18,9 @@
 
 import _pymeanshift
 
+__version__ = '0.2.1'
+__version_info__ = tuple([ int(num) for num in __version__.split('.')])
+
 '''
 Python Extension for Mean Shift Image Segmentation (PyMeanShift)
      
@@ -28,10 +31,8 @@ using Numpy arrays.
     
 For details on the algorithm:
 D. Comanicu, P. Meer: "Mean shift: A robust approach toward feature space analysis".
-IEEE Transactions on Pattern Analysis and Machine Intelligence, May 2002.
-  
+IEEE Transactions on Pattern Analysis and Machine Intelligence, May 2002.  
 '''
-
 
 SPEEDUP_NO = _pymeanshift.SPEEDUP_NO
 SPEEDUP_MEDIUM = _pymeanshift.SPEEDUP_MEDIUM
@@ -70,15 +71,16 @@ class Segmenter(object):
     '''
     Segmenter class using the mean shift algorithm to segment image
     '''
-    _spatial_radius = None
-    _range_radius = None
-    _min_density = None
-    _speedup_level = None
     
     def __init__(self, spatial_radius=None, range_radius=None, min_density=None, speedup_level=SPEEDUP_HIGH):
         '''
         Segmenter init function. See function segment for keywords description.
         '''
+        self._spatial_radius = None
+        self._range_radius = None
+        self._min_density = None
+        self._speedup_level = None
+        
         if spatial_radius is not None:
             self.spatial_radius = spatial_radius
         if range_radius is not None:
