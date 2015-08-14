@@ -1,8 +1,8 @@
 **PyMeanShift** is a Python module/extension for segmenting images using the mean shift algorithm. The PyMeanShift module/extension has been designed to use Numpy arrays, which makes it compatible with the OpenCV module "cv2" and the PIL module.
 
-The mean shift algorithm and its C++ implementation are by Chris M. Christoudias and Bogdan Georgescu. The PyMeanShift extension provides a Python interface  to the meanshift C++ implementation using Numpy arrays.  For more information, see the wiki page on [Implementation Notes](wiki/ImplementationNotes).
+The mean shift algorithm and its C++ implementation are by Chris M. Christoudias and Bogdan Georgescu. The PyMeanShift extension provides a Python interface  to the meanshift C++ implementation using Numpy arrays.  For more information, see the wiki page on [Implementation Notes](https://github.com/fjean/pymeanshift/wiki/ImplementationNotes).
 
-Installation instructions can be found on the [Install](wiki/Install) wiki page. Examples of mean shift image segmentation with different parameters values are presented on the [Examples](wiki/Examples) wiki page.
+Installation instructions can be found on the [Install](https://github.com/fjean/pymeanshift/wiki/Install) wiki page. Examples of mean shift image segmentation with different parameters values are presented on the [Examples](https://github.com/fjean/pymeanshift/wiki/Examples) wiki page.
 
 
 Code example with OpenCV:
