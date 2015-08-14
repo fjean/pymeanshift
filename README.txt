@@ -12,7 +12,7 @@ Table of Contents:
 1. PREREQUISITES
 ------------------------------------------------------------------------------
 
-  See http://code.google.com/p/pymeanshift/wiki/Install for the lastest
+  See https://github.com/fjean/pymeanshift/wiki/Install for the lastest
   prerequisites.
 
   You need to have the following installed on your computer:
@@ -33,7 +33,7 @@ Table of Contents:
 2. INSTALL
 ------------------------------------------------------------------------------
 
-  See http://code.google.com/p/pymeanshift/wiki/Install for the lastest
+  See https://github.com/fjean/pymeanshift/wiki/Install for the lastest
   install instructions.
 
   * The Python extension can be compiled as follows:
@@ -68,7 +68,7 @@ Table of Contents:
 3. IMPLEMENTATION NOTES
 ------------------------------------------------------------------------------
 
-  See http://code.google.com/p/pymeanshift/wiki/ImplementationNotes for the
+  See https://github.com/fjean/pymeanshift/wiki/ImplementationNotes for the
   lastest implementation notes.
 
   The mean shift algorithm and its C++ implementation are by
