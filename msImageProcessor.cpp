@@ -15,7 +15,7 @@
 	The following class inherits from the mean shift library
 	in order to perform the specialized tasks of image
 	segmentation and filtering.
-	
+
 	The definition of the Mean Shift Image Processor Class
 	is provided below. Its prototype is provided in
 	'msImageProcessor.h'.
@@ -33,7 +33,7 @@ and they are is available at:
 Implemented by Chris M. Christoudias, Bogdan Georgescu
 ********************************************************/
 
-// Uncomment this definition to restore file to original state.  
+// Uncomment this definition to restore file to original state.
 // I commented it to get rid of compilation/linking errors.  -- STB 7/16/05
 // #define USE_MSSYS_PROGRESS 1
 
@@ -157,7 +157,7 @@ msImageProcessor::~msImageProcessor( void )
 /*        the image segmenter class to be segmented.   */
 /*******************************************************/
 
-void msImageProcessor::DefineImage(byte *data_, imageType type, int height_, int width_)
+void msImageProcessor::DefineImage(byte *data_, imageType type, int height_, int width_, kernelType sk, kernelType rk)
 {
 
 	//obtain image dimension from image type
@@ -189,7 +189,7 @@ void msImageProcessor::DefineImage(byte *data_, imageType type, int height_, int
 	if(!h)
 	{
 		//define default kernel paramerters...
-		kernelType	k[2]		= {Uniform, Uniform};
+		kernelType	k[2]		= {sk, rk};
 		int			P[2]		= {2, N};
 		float		tempH[2]	= {1.0 , 1.0};
 
@@ -403,15 +403,15 @@ void msImageProcessor::Filter(int sigmaS, float sigmaR, SpeedUpLevel speedUpLeve
 	switch(speedUpLevel)
 	{
 	//no speedup...
-	case NO_SPEEDUP:	
+	case NO_SPEEDUP:
       //NonOptimizedFilter((float)(sigmaS), sigmaR);	break;
       NewNonOptimizedFilter((float)(sigmaS), sigmaR);	break;
 	//medium speedup
-	case MED_SPEEDUP:	
+	case MED_SPEEDUP:
       //OptimizedFilter1((float)(sigmaS), sigmaR);		break;
       NewOptimizedFilter1((float)(sigmaS), sigmaR);		break;
 	//high speedup
-	case HIGH_SPEEDUP: 
+	case HIGH_SPEEDUP:
       //OptimizedFilter2((float)(sigmaS), sigmaR);		break;
       NewOptimizedFilter2((float)(sigmaS), sigmaR);		break;
    // new speedup
@@ -468,10 +468,10 @@ void msImageProcessor::Filter(int sigmaS, float sigmaR, SpeedUpLevel speedUpLeve
 	msSys.Prompt("(%6.2f sec)\nConnecting regions         ...", timer);
 	msSys.StartTimer();
 #endif
-	
+
 	//Perform connecting (label image regions) using LUV_data
 	Connect();
-	
+
 #ifdef PROMPT
 	timer	= msSys.ElapsedTime();
 	msSys.Prompt("done. (%6.2f seconds, numRegions = %6d)\n", timer, regionCount);
@@ -551,7 +551,7 @@ void msImageProcessor::FuseRegions(float sigmaS, int minRegion)
 		//Initialize output data structure used to store
 		//image modes and their corresponding regions...
 		InitializeOutput();
-		
+
 		//check for errors...
 		if(ErrorStatus == EL_ERROR)
 			return;
@@ -573,7 +573,7 @@ void msImageProcessor::FuseRegions(float sigmaS, int minRegion)
       {
          LUV_data[i] = data[i];
       }
-		
+
 #ifdef PROMPT
 		msSys.Prompt("Connecting regions         ...");
 		msSys.StartTimer();
@@ -581,16 +581,16 @@ void msImageProcessor::FuseRegions(float sigmaS, int minRegion)
 
 		//Perform connecting (label image regions) using LUV_data
 		Connect();
-		
+
 		//check for errors
 		if(ErrorStatus == EL_ERROR)
 			return;
-		
+
 #ifdef PROMPT
 		double timer	= msSys.ElapsedTime();
 		msSys.Prompt("done. (%6.2f seconds, numRegions = %6d)\n", timer, regionCount);
 #endif
-		
+
 	}
 
 #ifdef USE_MSSYS_PROGRESS
@@ -1042,7 +1042,7 @@ void msImageProcessor::GetResults(byte *outputImage)
 
 			//get value
 			pxValue = (int)(msRawData[i]+0.5);
-			
+
 			//store into segmented image checking bounds...
 			if(pxValue < 0)
 				outputImage[i] = (byte)(0);
@@ -1056,7 +1056,7 @@ void msImageProcessor::GetResults(byte *outputImage)
 	}
 	else if (N == 3)
 	{
-		
+
 		//otherwise convert msRawData from LUV to RGB
 		//storing the result in segmentedImage
 		int i;
@@ -1098,7 +1098,7 @@ RegionList *msImageProcessor::GetBoundaries( void )
 	return regionList;
 
 }
- 
+
 /*******************************************************/
 /*Get Regions                                          */
 /*******************************************************/
@@ -1139,7 +1139,7 @@ int msImageProcessor::GetRegions(int **labels_out, float **modes_out, int **MPC_
 	//allocate memory for labels_out, modes_out and MPC_out based
 	//on output storage structure
 	int		*labels_	= *labels_out, *MPC_out_ = *MPC_out;
-	float	*modes_		= *modes_out; 
+	float	*modes_		= *modes_out;
 	if(!(labels_ = new int [L]))
 	{
 		ErrorHandler("msImageProcessor", "GetRegions", "Not enough memory.");
@@ -1218,7 +1218,7 @@ void msImageProcessor::NonOptimizedFilter(float sigmaS, float sigmaR)
 	// Declare Variables
 	int   iterationCount, i, j;
 	double mvAbs;
-	
+
 	//make sure that a lattice height and width have
 	//been defined...
 	if(!height)
@@ -1233,19 +1233,19 @@ void msImageProcessor::NonOptimizedFilter(float sigmaS, float sigmaR)
 		ErrorHandler("msImageProcessor", "Segment", "sigmaS and/or sigmaR is zero or negative.");
 		return;
 	}
-	
+
 	//define input data dimension with lattice
 	int lN	= N + 2;
-	
+
 	// Traverse each data point applying mean shift
 	// to each data point
-	
+
 	// Allcocate memory for yk
 	double	*yk		= new double [lN];
-	
+
 	// Allocate memory for Mh
 	double	*Mh		= new double [lN];
-	
+
 	// proceed ...
 #ifdef PROMPT
 	msSys.Prompt("done.\nApplying mean shift (Using Lattice)... ");
@@ -1264,33 +1264,33 @@ void msImageProcessor::NonOptimizedFilter(float sigmaS, float sigmaR)
 		yk[1] = i/width;
 		for(j = 0; j < N; j++)
 			yk[j+2] = data[N*i+j];
-		
+
 		// Calculate the mean shift vector using the lattice
 		LatticeMSVector(Mh, yk);
-		
+
 		// Calculate its magnitude squared
 		mvAbs = 0;
 		for(j = 0; j < lN; j++)
 			mvAbs += Mh[j]*Mh[j];
-		
+
 		// Keep shifting window center until the magnitude squared of the
 		// mean shift vector calculated at the window center location is
 		// under a specified threshold (Epsilon)
-		
+
 		// NOTE: iteration count is for speed up purposes only - it
 		//       does not have any theoretical importance
 		iterationCount = 1;
 		while((mvAbs >= EPSILON)&&(iterationCount < LIMIT))
 		{
-			
+
 			// Shift window location
 			for(j = 0; j < lN; j++)
 				yk[j] += Mh[j];
-			
+
 			// Calculate the mean shift vector at the new
 			// window location using lattice
 			LatticeMSVector(Mh, yk);
-			
+
 			// Calculate its magnitude squared
 			mvAbs = 0;
 			for(j = 0; j < lN; j++)
@@ -1298,13 +1298,13 @@ void msImageProcessor::NonOptimizedFilter(float sigmaS, float sigmaR)
 
 			// Increment interation count
 			iterationCount++;
-			
+
 		}
 
 		// Shift window location
 		for(j = 0; j < lN; j++)
 			yk[j] += Mh[j];
-		
+
 		//store result into msRawData...
 		for(j = 0; j < N; j++)
 			msRawData[N*i+j] = (float)(yk[j+2]);
@@ -1314,14 +1314,14 @@ void msImageProcessor::NonOptimizedFilter(float sigmaS, float sigmaR)
 		percent_complete = (float)(i/(float)(L))*100;
 		msSys.Prompt("\r%2d%%", (int)(percent_complete + 0.5));
 #endif
-	
+
 #ifdef USE_MSSYS_PROGRESS
 		// Check to see if the algorithm has been halted
 		if((i%PROGRESS_RATE == 0)&&((ErrorStatus = msSys.Progress((float)(i/(float)(L))*(float)(0.8)))) == EL_HALT)
 			break;
 #endif
 	}
-  
+
 	// Prompt user that filtering is completed
 #ifdef PROMPT
 #ifdef SHOW_PROGRESS
@@ -1329,7 +1329,7 @@ void msImageProcessor::NonOptimizedFilter(float sigmaS, float sigmaR)
 #endif
 	msSys.Prompt("done.");
 #endif
-	
+
 	// de-allocate memory
 	delete [] yk;
 	delete [] Mh;
@@ -1371,7 +1371,7 @@ void msImageProcessor::OptimizedFilter1(float sigmaS, float sigmaR)
 	int		iterationCount, i, j, k, s, p, modeCandidateX, modeCandidateY, modeCandidate_i;
 	float	*modeCandidatePoint;
 	double	mvAbs, diff, el;
-	
+
 	//make sure that a lattice height and width have
 	//been defined...
 	if(!height)
@@ -1386,26 +1386,26 @@ void msImageProcessor::OptimizedFilter1(float sigmaS, float sigmaR)
 		ErrorHandler("msImageProcessor", "Segment", "sigmaS and/or sigmaR is zero or negative.");
 		return;
 	}
-	
+
 	//define input data dimension with lattice
 	int lN	= N + 2;
-	
+
 	// Traverse each data point applying mean shift
 	// to each data point
-	
+
 	// Allcocate memory for yk
 	double	*yk		= new double [lN];
-	
+
 	// Allocate memory for Mh
 	double	*Mh		= new double [lN];
-	
+
 	// Initialize mode table used for basin of attraction
 	memset(modeTable, 0, width*height);
 
 	// Allocate memory mode candidate data point...
 	//floating point version
 	modeCandidatePoint	= new float	[N];
-	
+
 	// proceed ...
 #ifdef PROMPT
 	msSys.Prompt("done.\nApplying mean shift (Using Lattice) ... ");
@@ -1433,29 +1433,29 @@ void msImageProcessor::OptimizedFilter1(float sigmaS, float sigmaR)
 		yk[1] = i/width;
 		for(j = 0; j < N; j++)
 			yk[j+2] = data[N*i+j];
-		
+
 		// Calculate the mean shift vector using the lattice
 		LatticeMSVector(Mh, yk);
-		
+
 		// Calculate its magnitude squared
 		mvAbs = 0;
 		for(j = 0; j < lN; j++)
 			mvAbs += Mh[j]*Mh[j];
-		
+
 		// Keep shifting window center until the magnitude squared of the
 		// mean shift vector calculated at the window center location is
 		// under a specified threshold (Epsilon)
-		
+
 		// NOTE: iteration count is for speed up purposes only - it
 		//       does not have any theoretical importance
 		iterationCount = 1;
 		while((mvAbs >= EPSILON)&&(iterationCount < LIMIT))
 		{
-			
+
 			// Shift window location
 			for(j = 0; j < lN; j++)
 				yk[j] += Mh[j];
-			
+
 			// check to see if the current mode location is in the
 			// basin of attraction...
 
@@ -1467,7 +1467,7 @@ void msImageProcessor::OptimizedFilter1(float sigmaS, float sigmaR)
 			// if mvAbs != 0 (yk did indeed move) then check
 			// location basin_i in the mode table to see if
 			// this data point either:
-			
+
 			// (1) has not been associated with a mode yet
 			//     (modeTable[basin_i] = 0), so associate
 			//     it with this one
@@ -1484,7 +1484,7 @@ void msImageProcessor::OptimizedFilter1(float sigmaS, float sigmaR)
 				// of yk
 				for (j = 0; j < N; j++)
 					modeCandidatePoint[j] = data[N*modeCandidate_i + j];
-				
+
 				// check basin on non-spatial data spaces only
 				k = 1;
 				s = 0;
@@ -1544,11 +1544,11 @@ void msImageProcessor::OptimizedFilter1(float sigmaS, float sigmaR)
 					}
 				}
 			}
-			
+
 			// Calculate the mean shift vector at the new
 			// window location using lattice
 			LatticeMSVector(Mh, yk);
-			
+
 			// Calculate its magnitude squared
 			mvAbs = 0;
 			for(j = 0; j < lN; j++)
@@ -1556,7 +1556,7 @@ void msImageProcessor::OptimizedFilter1(float sigmaS, float sigmaR)
 
 			// Increment iteration count
 			iterationCount++;
-			
+
 		}
 
 		// if a mode was not associated with this data point
@@ -1566,13 +1566,13 @@ void msImageProcessor::OptimizedFilter1(float sigmaS, float sigmaR)
 			// Shift window location
 			for(j = 0; j < lN; j++)
 				yk[j] += Mh[j];
-			
+
 			// update mode table for this data point
 			// indicating that a mode has been associated
 			// with it
 			modeTable[i] = 1;
 		}
-		
+
 		// associate the data point indexed by
 		// the point list with the mode stored
 		// by yk
@@ -1600,14 +1600,14 @@ void msImageProcessor::OptimizedFilter1(float sigmaS, float sigmaR)
 		percent_complete = (float)(i/(float)(L))*100;
 		msSys.Prompt("\r%2d%%", (int)(percent_complete + 0.5));
 #endif
-	
+
 #ifdef USE_MSSYS_PROGRESS
 		// Check to see if the algorithm has been halted
 		if((i%PROGRESS_RATE == 0)&&((ErrorStatus = msSys.Progress((float)(i/(float)(L))*(float)(0.8)))) == EL_HALT)
-			break;		
+			break;
 #endif
 	}
-  
+
 	// Prompt user that filtering is completed
 #ifdef PROMPT
 #ifdef SHOW_PROGRESS
@@ -1615,12 +1615,12 @@ void msImageProcessor::OptimizedFilter1(float sigmaS, float sigmaR)
 #endif
 	msSys.Prompt("done.");
 #endif
-	
+
 	// de-allocate memory
 	delete [] modeCandidatePoint;
 	delete [] yk;
 	delete [] Mh;
-	
+
 	// done.
 	return;
 
@@ -1669,7 +1669,7 @@ void msImageProcessor::OptimizedFilter2(float sigmaS, float sigmaR)
 	int		iterationCount, i, j, k, s, p, modeCandidateX, modeCandidateY, modeCandidate_i;
 	float	*modeCandidatePoint;
 	double	mvAbs, diff, el;
-	
+
 	//make sure that a lattice height and width have
 	//been defined...
 	if(!height)
@@ -1684,26 +1684,26 @@ void msImageProcessor::OptimizedFilter2(float sigmaS, float sigmaR)
 		ErrorHandler("msImageProcessor", "Segment", "sigmaS and/or sigmaR is zero or negative.");
 		return;
 	}
-	
+
 	//define input data dimension with lattice
 	int lN	= N + 2;
-	
+
 	// Traverse each data point applying mean shift
 	// to each data point
-	
+
 	// Allcocate memory for yk
 	double	*yk		= new double [lN];
-	
+
 	// Allocate memory for Mh
 	double	*Mh		= new double [lN];
-	
+
 	// Initialize mode table used for basin of attraction
 	memset(modeTable, 0, width*height);
 
 	// Allocate memory mode candidate data point...
 	//floating point version
 	modeCandidatePoint	= new float	[N];
-	
+
 	// proceed ...
 #ifdef PROMPT
 	msSys.Prompt("done.\nApplying mean shift (Using Lattice)... ");
@@ -1730,29 +1730,29 @@ void msImageProcessor::OptimizedFilter2(float sigmaS, float sigmaR)
 		yk[1] = i/width;
 		for(j = 0; j < N; j++)
 			yk[j+2] = data[N*i+j];
-		
+
 		// Calculate the mean shift vector using the lattice
 		OptLatticeMSVector(Mh, yk);
-		
+
 		// Calculate its magnitude squared
 		mvAbs = 0;
 		for(j = 0; j < lN; j++)
 			mvAbs += Mh[j]*Mh[j];
-		
+
 		// Keep shifting window center until the magnitude squared of the
 		// mean shift vector calculated at the window center location is
 		// under a specified threshold (Epsilon)
-		
+
 		// NOTE: iteration count is for speed up purposes only - it
 		//       does not have any theoretical importance
 		iterationCount = 1;
 		while((mvAbs >= EPSILON)&&(iterationCount < LIMIT))
 		{
-			
+
 			// Shift window location
 			for(j = 0; j < lN; j++)
 				yk[j] += Mh[j];
-			
+
 			// check to see if the current mode location is in the
 			// basin of attraction...
 
@@ -1764,7 +1764,7 @@ void msImageProcessor::OptimizedFilter2(float sigmaS, float sigmaR)
 			// if mvAbs != 0 (yk did indeed move) then check
 			// location basin_i in the mode table to see if
 			// this data point either:
-			
+
 			// (1) has not been associated with a mode yet
 			//     (modeTable[basin_i] = 0), so associate
 			//     it with this one
@@ -1781,7 +1781,7 @@ void msImageProcessor::OptimizedFilter2(float sigmaS, float sigmaR)
 				// of yk
 				for (j = 0; j < N; j++)
 					modeCandidatePoint[j] = data[N*modeCandidate_i + j];
-				
+
 				// check basin on non-spatial data spaces only
 				k = 1;
 				s = 0;
@@ -1841,11 +1841,11 @@ void msImageProcessor::OptimizedFilter2(float sigmaS, float sigmaR)
 					}
 				}
 			}
-			
+
 			// Calculate the mean shift vector at the new
 			// window location using lattice
 			OptLatticeMSVector(Mh, yk);
-			
+
 			// Calculate its magnitude squared
 			mvAbs = 0;
 			for(j = 0; j < lN; j++)
@@ -1853,7 +1853,7 @@ void msImageProcessor::OptimizedFilter2(float sigmaS, float sigmaR)
 
 			// Increment interation count
 			iterationCount++;
-			
+
 		}
 
 		// if a mode was not associated with this data point
@@ -1870,7 +1870,7 @@ void msImageProcessor::OptimizedFilter2(float sigmaS, float sigmaR)
    		// with it
 			modeTable[i] = 1;
 		}
-		
+
 		// associate the data point indexed by
 		// the point list with the mode stored
 		// by yk
@@ -1898,15 +1898,15 @@ void msImageProcessor::OptimizedFilter2(float sigmaS, float sigmaR)
 		percent_complete = (float)(i/(float)(L))*100;
 		msSys.Prompt("\r%2d%%", (int)(percent_complete + 0.5));
 #endif
-	
+
 #ifdef USE_MSSYS_PROGRESS
 		// Check to see if the algorithm has been halted
 		if((i%PROGRESS_RATE == 0)&&((ErrorStatus = msSys.Progress((float)(i/(float)(L))*(float)(0.8)))) == EL_HALT)
 			break;
 #endif
-		
+
 	}
-	
+
 	// Prompt user that filtering is completed
 #ifdef PROMPT
 #ifdef SHOW_PROGRESS
@@ -1914,12 +1914,12 @@ void msImageProcessor::OptimizedFilter2(float sigmaS, float sigmaR)
 #endif
 	msSys.Prompt("done.");
 #endif
-	
+
 	// de-allocate memory
 	delete [] modeCandidatePoint;
 	delete [] yk;
 	delete [] Mh;
-	
+
 	// done.
 	return;
 
@@ -2040,7 +2040,7 @@ void msImageProcessor::Fill(int regionLoc, int label)
 		neighborsFound	= 0;
 
 		//check the eight connected neighbors at regionLoc -
-		//if a pixel has similar color to that located at 
+		//if a pixel has similar color to that located at
 		//regionLoc then declare it as part of this region
 		for(i = 0; i < 8; i++)
 		{
@@ -2052,7 +2052,7 @@ void msImageProcessor::Fill(int regionLoc, int label)
 				continue;
 			if((regionLoc%(width-1) == 0)&&((i == 0)||(i == 1)||(i == 7)))
 				continue;
-         */   
+         */
 
 			//check bounds and if neighbor has been already labeled
 			neighLoc			= regionLoc + neigh[i];
@@ -2064,7 +2064,7 @@ void msImageProcessor::Fill(int regionLoc, int label)
                if (fabs(LUV_data[(regionLoc*N)+k]-LUV_data[(neighLoc*N)+k])>=LUV_treshold)
 						break;
 				}
-				
+
 				//neighbor i belongs to this region so label it and
 				//place it onto the index table buffer for further
 				//processing
@@ -2072,13 +2072,13 @@ void msImageProcessor::Fill(int regionLoc, int label)
 				{
 					//assign label to neighbor i
 					labels[neighLoc]	= label;
-					
+
 					//increment region point count
 					modePointCounts[label]++;
-					
+
 					//place index of neighbor i onto the index tabel buffer
 					indexTable[++index]	= neighLoc;
-					
+
 					//indicate that a neighboring region pixel was
 					//identified
 					neighborsFound	= 1;
@@ -2258,24 +2258,24 @@ void msImageProcessor::BuildRAM( void )
 			//list
 			raNode1			= freeRAList;
 			raNode2			= freeRAList->next;
-			
+
 			//keep a pointer to the old region adj. free
 			//list just in case nodes already exist in respective
 			//region lists
 			oldRAFreeList	= freeRAList;
-			
+
 			//update region adjacency free list
 			freeRAList		= freeRAList->next->next;
-			
+
 			//populate RAList nodes
 			raNode1->label	= curLabel;
 			raNode2->label	= bottomLabel;
-			
+
 			//insert nodes into the RAM
 			exists			= 0;
 			raList[curLabel  ].Insert(raNode2);
 			exists			= raList[bottomLabel].Insert(raNode1);
-			
+
 			//if the node already exists then place
 			//nodes back onto the region adjacency
 			//free list
@@ -2294,7 +2294,7 @@ void msImageProcessor::BuildRAM( void )
 		//calculate pixel labels (i = height-1)
 		curLabel	= labels[i*width+j    ];	//current pixel
 		rightLabel	= labels[i*width+j+1  ];	//right   pixel
-		
+
 		//check to the right, if the label of
 		//the right pixel is not the same as that
 		//of the current one then region[j] and region[j+1]
@@ -2310,19 +2310,19 @@ void msImageProcessor::BuildRAM( void )
 			//list just in case nodes already exist in respective
 			//region lists
 			oldRAFreeList	= freeRAList;
-			
+
 			//update region adjacency free list
 			freeRAList		= freeRAList->next->next;
-			
+
 			//populate RAList nodes
 			raNode1->label	= curLabel;
 			raNode2->label	= rightLabel;
-			
+
 			//insert nodes into the RAM
 			exists			= 0;
 			raList[curLabel  ].Insert(raNode2);
 			exists			= raList[rightLabel].Insert(raNode1);
-			
+
 			//if the node already exists then place
 			//nodes back onto the region adjacency
 			//free list
@@ -2656,7 +2656,7 @@ void msImageProcessor::ComputeEdgeStrengths( void )
 				{
 					curRegion->edgeStrength   += weightMap[dp] + weightMap[dp+width];
 					curRegion->edgePixelCount += 2;
-				} 
+				}
 				else
 				{
 					curRegion->edgeStrength	  += weightMap[dp+width];
@@ -2692,10 +2692,10 @@ void msImageProcessor::ComputeEdgeStrengths( void )
 				neighborRegion = &raList[curLabel];
 				while((neighborRegion)&&(neighborRegion->label != x))
 					neighborRegion = neighborRegion->next;
-				
+
 				//this should not occur...
 				assert(neighborRegion);
-				
+
 				//compute edge strengths using accumulated confidence
 				//value and pixel count
 				if((edgePixelCount = curRegion->edgePixelCount + neighborRegion->edgePixelCount) != 0)
@@ -2703,7 +2703,7 @@ void msImageProcessor::ComputeEdgeStrengths( void )
 					//compute edge strength
 					edgeStrength	= curRegion->edgeStrength + neighborRegion->edgeStrength;
 					edgeStrength	/= edgePixelCount;
-					
+
 					//store edge strength and pixel count for corresponding regions
 					curRegion->edgeStrength		= neighborRegion->edgeStrength		= edgeStrength;
 					curRegion->edgePixelCount	= neighborRegion->edgePixelCount	= edgePixelCount;
@@ -2770,47 +2770,47 @@ void msImageProcessor::ComputeEdgeStrengths( void )
 
 void msImageProcessor::Prune(int minRegion)
 {
-	
+
 	//Allocate Memory for temporary buffers...
-	
+
 	//allocate memory for mode and point count temporary buffers...
 	float	*modes_buffer	= new float	[N*regionCount];
 	int		*MPC_buffer		= new int	[regionCount];
-	
+
 	//allocate memory for label buffer
 	int	*label_buffer		= new int	[regionCount];
-	
+
 	//Declare variables
 	int		i, k, candidate, iCanEl, neighCanEl, iMPC, label, oldRegionCount, minRegionCount;
 	double	minSqDistance, neighborDistance;
 	RAList	*neighbor;
-	
+
 	//Apply pruning algorithm to classification structure, removing all regions whose area
 	//is under the threshold area minRegion (pixels)
 	do
 	{
-		//Assume that no region has area under threshold area  of 
-		minRegionCount	= 0;		
+		//Assume that no region has area under threshold area  of
+		minRegionCount	= 0;
 
 		//Step (1):
-		
+
 		// Build RAM using classifiction structure originally
 		// generated by the method GridTable::Connect()
 		BuildRAM();
-		
+
 		// Step (2):
-		
+
 		// Traverse the RAM joining regions whose area is less than minRegion (pixels)
 		// with its respective candidate region.
-		
+
 		// A candidate region is a region that displays the following properties:
-		
+
 		//	- it is adjacent to the region being pruned
-		
+
 		//  - the distance of its mode is a minimum to that of the region being pruned
 		//    such that or it is the only adjacent region having an area greater than
 		//    minRegion
-		
+
 		for(i = 0; i < regionCount; i++)
 		{
 			//if the area of the ith region is less than minRegion
@@ -2835,12 +2835,12 @@ void msImageProcessor::Prune(int minRegion)
 				//obtain a pointer to the first region in the
 				//region adjacency list of the ith region...
 				neighbor	= raList[i].next;
-				
+
 				//calculate the distance between the mode of the ith
 				//region and that of the neighboring region...
 				candidate		= neighbor->label;
 				minSqDistance	= SqDistance(i, candidate);
-				
+
 				//traverse region adjacency list of region i and select
 				//a candidate region
 				neighbor	= neighbor->next;
@@ -2895,7 +2895,7 @@ void msImageProcessor::Prune(int minRegion)
 		}
 
 		// Step (3):
-		
+
 		// Level binary trees formed by canonical elements
 		for(i = 0; i < regionCount; i++)
 		{
@@ -2904,53 +2904,53 @@ void msImageProcessor::Prune(int minRegion)
 				iCanEl	= raList[iCanEl].label;
 			raList[i].label	= iCanEl;
 		}
-		
+
 		// Step (4):
-		
+
 		//Traverse joint sets, relabeling image.
-		
+
 		// Accumulate modes and re-compute point counts using canonical
 		// elements generated by step 2.
-		
+
 		//initialize buffers to zero
 		for(i = 0; i < regionCount; i++)
 			MPC_buffer[i]	= 0;
 		for(i = 0; i < N*regionCount; i++)
 			modes_buffer[i]	= 0;
-		
+
 		//traverse raList accumulating modes and point counts
 		//using canoncial element information...
 		for(i = 0; i < regionCount; i++)
 		{
-			
+
 			//obtain canonical element of region i
 			iCanEl	= raList[i].label;
-			
+
 			//obtain mode point count of region i
 			iMPC	= modePointCounts[i];
-			
+
 			//accumulate modes_buffer[iCanEl]
 			for(k = 0; k < N; k++)
 				modes_buffer[(N*iCanEl)+k] += iMPC*modes[(N*i)+k];
-			
+
 			//accumulate MPC_buffer[iCanEl]
 			MPC_buffer[iCanEl] += iMPC;
-			
+
 		}
-		
+
 		// (b)
-		
+
 		// Re-label new regions of the image using the canonical
 		// element information generated by step (2)
-		
+
 		// Also use this information to compute the modes of the newly
 		// defined regions, and to assign new region point counts in
 		// a consecute manner to the modePointCounts array
-		
+
 		//initialize label buffer to -1
 		for(i = 0; i < regionCount; i++)
 			label_buffer[i]	= -1;
-		
+
 		//traverse raList re-labeling the regions
 		label = -1;
 		for(i = 0; i < regionCount; i++)
@@ -2962,41 +2962,41 @@ void msImageProcessor::Prune(int minRegion)
 				//assign a label to the new region indicated by canonical
 				//element of i
 				label_buffer[iCanEl]	= ++label;
-				
+
 				//recompute mode storing the result in modes[label]...
 				iMPC	= MPC_buffer[iCanEl];
 				for(k = 0; k < N; k++)
 					modes[(N*label)+k]	= (modes_buffer[(N*iCanEl)+k])/(iMPC);
-				
+
 				//assign a corresponding mode point count for this region into
 				//the mode point counts array using the MPC buffer...
 				modePointCounts[label]	= MPC_buffer[iCanEl];
 			}
 		}
-		
+
 		//re-assign region count using label counter
 		oldRegionCount	= regionCount;
 		regionCount		= label+1;
-		
+
 		// (c)
-		
+
 		// Use the label buffer to reconstruct the label map, which specified
 		// the new image given its new regions calculated above
-		
+
 		for(i = 0; i < height*width; i++)
 			labels[i]	= label_buffer[raList[labels[i]].label];
 
-		
+
 	}	while(minRegionCount > 0);
 
 	//de-allocate memory
 	delete [] modes_buffer;
 	delete [] MPC_buffer;
 	delete [] label_buffer;
-	
+
 	//done.
 	return;
-	
+
 }
 
 /*******************************************************/
@@ -3174,7 +3174,7 @@ void msImageProcessor::DefineBoundaries( void )
 	/*/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\*/
 	/*  Image Data Searching/Distance Calculation */
 	/*\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/*/
-		
+
 /*******************************************************/
 /*In Window                                            */
 /*******************************************************/
@@ -3197,7 +3197,7 @@ bool msImageProcessor::InWindow(int mode1, int mode2)
 	double	diff	= 0, el;
 	while((diff < 0.25)&&(k != kp)) // Partial Distortion Search
 	{
-		//Calculate distance squared of sub-space s	
+		//Calculate distance squared of sub-space s
 		diff = 0;
 		for(p = 0; p < P[k]; p++)
 		{
@@ -3207,7 +3207,7 @@ bool msImageProcessor::InWindow(int mode1, int mode2)
 			else
 				diff += el*el;
 		}
-		
+
 		//next subspace
 		s += P[k];
 		k++;
@@ -3237,13 +3237,13 @@ float msImageProcessor::SqDistance(int mode1, int mode2)
 	float	dist	= 0, el;
 	for(k = 1; k < kp; k++)
 	{
-		//Calculate distance squared of sub-space s	
+		//Calculate distance squared of sub-space s
 		for(p = 0; p < P[k]; p++)
 		{
 			el    = (modes[mode1*N+p+s]-modes[mode2*N+p+s])/(h[k]*offset[k]);
 			dist += el*el;
 		}
-		
+
 		//next subspace
 		s += P[k];
 		k++;
@@ -3331,10 +3331,10 @@ void msImageProcessor::DestroyOutput( void )
 	if (labels)				delete [] labels;
 	if (modePointCounts)	delete [] modePointCounts;
 	if (indexTable)			delete [] indexTable;
-	
+
 	//de-allocate memory for LUV_data
 	if (LUV_data)			delete [] LUV_data;
-		
+
 	//initialize data members for re-use...
 
 	//initialize output structures...
@@ -3360,7 +3360,7 @@ void msImageProcessor::NewOptimizedFilter1(float sigmaS, float sigmaR)
 	// Declare Variables
 	int		iterationCount, i, j, k, modeCandidateX, modeCandidateY, modeCandidate_i;
 	double	mvAbs, diff, el;
-	
+
 	//make sure that a lattice height and width have
 	//been defined...
 	if(!height)
@@ -3375,16 +3375,16 @@ void msImageProcessor::NewOptimizedFilter1(float sigmaS, float sigmaR)
 		ErrorHandler("msImageProcessor", "Segment", "sigmaS and/or sigmaR is zero or negative.");
 		return;
 	}
-	
+
 	//define input data dimension with lattice
 	int lN	= N + 2;
-	
+
 	// Traverse each data point applying mean shift
 	// to each data point
-	
+
 	// Allcocate memory for yk
 	double	*yk		= new double [lN];
-	
+
 	// Allocate memory for Mh
 	double	*Mh		= new double [lN];
 
@@ -3486,10 +3486,10 @@ void msImageProcessor::NewOptimizedFilter1(float sigmaS, float sigmaR)
    double hiLTr = 80.0/sigmaR;
    // done indexing/hashing
 
-	
+
 	// Initialize mode table used for basin of attraction
 	memset(modeTable, 0, width*height);
-	
+
 	// proceed ...
 #ifdef PROMPT
 	msSys.Prompt("done.\nApplying mean shift (Using Lattice) ... ");
@@ -3516,7 +3516,7 @@ void msImageProcessor::NewOptimizedFilter1(float sigmaS, float sigmaR)
       idxs = i*lN;
       for (j=0; j<lN; j++)
          yk[j] = sdata[idxs+j];
-		
+
 		// Calculate the mean shift vector using the lattice
 		// LatticeMSVector(Mh, yk); // modify to new
       /*****************************************************/
@@ -3591,21 +3591,21 @@ void msImageProcessor::NewOptimizedFilter1(float sigmaS, float sigmaR)
       else
          mvAbs += Mh[2]*Mh[2]*sigmaR*sigmaR;
 
-		
+
 		// Keep shifting window center until the magnitude squared of the
 		// mean shift vector calculated at the window center location is
 		// under a specified threshold (Epsilon)
-		
+
 		// NOTE: iteration count is for speed up purposes only - it
 		//       does not have any theoretical importance
 		iterationCount = 1;
 		while((mvAbs >= EPSILON)&&(iterationCount < LIMIT))
 		{
-			
+
 			// Shift window location
 			for(j = 0; j < lN; j++)
 				yk[j] += Mh[j];
-			
+
 			// check to see if the current mode location is in the
 			// basin of attraction...
 
@@ -3617,7 +3617,7 @@ void msImageProcessor::NewOptimizedFilter1(float sigmaS, float sigmaR)
 			// if mvAbs != 0 (yk did indeed move) then check
 			// location basin_i in the mode table to see if
 			// this data point either:
-			
+
 			// (1) has not been associated with a mode yet
 			//     (modeTable[basin_i] = 0), so associate
 			//     it with this one
@@ -3683,7 +3683,7 @@ void msImageProcessor::NewOptimizedFilter1(float sigmaS, float sigmaR)
 					}
 				}
 			}
-			
+
          // Calculate the mean shift vector at the new
          // window location using lattice
          // Calculate the mean shift vector using the lattice
@@ -3711,7 +3711,7 @@ void msImageProcessor::NewOptimizedFilter1(float sigmaS, float sigmaR)
                diff = el*el;
                el = sdata[idxs+1]-yk[1];
                diff += el*el;
-               
+
                if (diff < 1.0)
                {
                   el = sdata[idxs+2]-yk[2];
@@ -3719,7 +3719,7 @@ void msImageProcessor::NewOptimizedFilter1(float sigmaS, float sigmaR)
                      diff = 4*el*el;
                   else
                      diff = el*el;
-                  
+
                   if (N>1)
                   {
                      el = sdata[idxs+3]-yk[3];
@@ -3727,7 +3727,7 @@ void msImageProcessor::NewOptimizedFilter1(float sigmaS, float sigmaR)
                      el = sdata[idxs+4]-yk[4];
                      diff += el*el;
                   }
-                  
+
                   if (diff < 1.0)
                   {
                      weight = 1-weightMap[idxd];
@@ -3750,7 +3750,7 @@ void msImageProcessor::NewOptimizedFilter1(float sigmaS, float sigmaR)
                Mh[j] = 0;
          }
          /*****************************************************/
-			
+
 			// Calculate its magnitude squared
 			//mvAbs = 0;
 			//for(j = 0; j < lN; j++)
@@ -3763,7 +3763,7 @@ void msImageProcessor::NewOptimizedFilter1(float sigmaS, float sigmaR)
 
 			// Increment iteration count
 			iterationCount++;
-			
+
 		}
 
 		// if a mode was not associated with this data point
@@ -3773,14 +3773,14 @@ void msImageProcessor::NewOptimizedFilter1(float sigmaS, float sigmaR)
 			// Shift window location
 			for(j = 0; j < lN; j++)
 				yk[j] += Mh[j];
-			
+
 			// update mode table for this data point
 			// indicating that a mode has been associated
 			// with it
 			modeTable[i] = 1;
 
 		}
-		
+
       for (k=0; k<N; k++)
          yk[k+2] *= sigmaR;
 
@@ -3810,14 +3810,14 @@ void msImageProcessor::NewOptimizedFilter1(float sigmaS, float sigmaR)
 		percent_complete = (float)(i/(float)(L))*100;
 		msSys.Prompt("\r%2d%%", (int)(percent_complete + 0.5));
 #endif
-	
+
 #ifdef USE_MSSYS_PROGRESS
 		// Check to see if the algorithm has been halted
 		if((i%PROGRESS_RATE == 0)&&((ErrorStatus = msSys.Progress((float)(i/(float)(L))*(float)(0.8)))) == EL_HALT)
-			break;		
+			break;
 #endif
 	}
-	
+
 	// Prompt user that filtering is completed
 #ifdef PROMPT
 #ifdef SHOW_PROGRESS
@@ -3832,7 +3832,7 @@ void msImageProcessor::NewOptimizedFilter1(float sigmaS, float sigmaR)
 
 	delete [] yk;
 	delete [] Mh;
-	
+
 	// done.
 	return;
 
@@ -3844,7 +3844,7 @@ void msImageProcessor::NewOptimizedFilter2(float sigmaS, float sigmaR)
 	// Declare Variables
 	int		iterationCount, i, j, k, modeCandidateX, modeCandidateY, modeCandidate_i;
 	double	mvAbs, diff, el;
-	
+
 	//make sure that a lattice height and width have
 	//been defined...
 	if(!height)
@@ -3859,16 +3859,16 @@ void msImageProcessor::NewOptimizedFilter2(float sigmaS, float sigmaR)
 		ErrorHandler("msImageProcessor", "Segment", "sigmaS and/or sigmaR is zero or negative.");
 		return;
 	}
-	
+
 	//define input data dimension with lattice
 	int lN	= N + 2;
-	
+
 	// Traverse each data point applying mean shift
 	// to each data point
-	
+
 	// Allcocate memory for yk
 	double	*yk		= new double [lN];
-	
+
 	// Allocate memory for Mh
 	double	*Mh		= new double [lN];
 
@@ -3970,10 +3970,10 @@ void msImageProcessor::NewOptimizedFilter2(float sigmaS, float sigmaR)
    double hiLTr = 80.0/sigmaR;
    // done indexing/hashing
 
-	
+
 	// Initialize mode table used for basin of attraction
 	memset(modeTable, 0, width*height);
-	
+
 	// proceed ...
 #ifdef PROMPT
 	msSys.Prompt("done.\nApplying mean shift (Using Lattice) ... ");
@@ -4000,7 +4000,7 @@ void msImageProcessor::NewOptimizedFilter2(float sigmaS, float sigmaR)
       idxs = i*lN;
       for (j=0; j<lN; j++)
          yk[j] = sdata[idxs+j];
-		
+
 		// Calculate the mean shift vector using the lattice
 		// LatticeMSVector(Mh, yk); // modify to new
       /*****************************************************/
@@ -4085,21 +4085,21 @@ void msImageProcessor::NewOptimizedFilter2(float sigmaS, float sigmaR)
       else
          mvAbs += Mh[2]*Mh[2]*sigmaR*sigmaR;
 
-		
+
 		// Keep shifting window center until the magnitude squared of the
 		// mean shift vector calculated at the window center location is
 		// under a specified threshold (Epsilon)
-		
+
 		// NOTE: iteration count is for speed up purposes only - it
 		//       does not have any theoretical importance
 		iterationCount = 1;
 		while((mvAbs >= EPSILON)&&(iterationCount < LIMIT))
 		{
-			
+
 			// Shift window location
 			for(j = 0; j < lN; j++)
 				yk[j] += Mh[j];
-			
+
 			// check to see if the current mode location is in the
 			// basin of attraction...
 
@@ -4111,7 +4111,7 @@ void msImageProcessor::NewOptimizedFilter2(float sigmaS, float sigmaR)
 			// if mvAbs != 0 (yk did indeed move) then check
 			// location basin_i in the mode table to see if
 			// this data point either:
-			
+
 			// (1) has not been associated with a mode yet
 			//     (modeTable[basin_i] = 0), so associate
 			//     it with this one
@@ -4177,7 +4177,7 @@ void msImageProcessor::NewOptimizedFilter2(float sigmaS, float sigmaR)
 					}
 				}
 			}
-			
+
          // Calculate the mean shift vector at the new
          // window location using lattice
          // Calculate the mean shift vector using the lattice
@@ -4205,7 +4205,7 @@ void msImageProcessor::NewOptimizedFilter2(float sigmaS, float sigmaR)
                diff = el*el;
                el = sdata[idxs+1]-yk[1];
                diff += el*el;
-               
+
                if (diff < 1.0)
                {
                   el = sdata[idxs+2]-yk[2];
@@ -4213,7 +4213,7 @@ void msImageProcessor::NewOptimizedFilter2(float sigmaS, float sigmaR)
                      diff = 4*el*el;
                   else
                      diff = el*el;
-                  
+
                   if (N>1)
                   {
                      el = sdata[idxs+3]-yk[3];
@@ -4221,7 +4221,7 @@ void msImageProcessor::NewOptimizedFilter2(float sigmaS, float sigmaR)
                      el = sdata[idxs+4]-yk[4];
                      diff += el*el;
                   }
-                  
+
                   if (diff < 1.0)
                   {
                      weight = 1-weightMap[idxd];
@@ -4255,7 +4255,7 @@ void msImageProcessor::NewOptimizedFilter2(float sigmaS, float sigmaR)
                Mh[j] = 0;
          }
          /*****************************************************/
-			
+
 			// Calculate its magnitude squared
 			//mvAbs = 0;
 			//for(j = 0; j < lN; j++)
@@ -4268,7 +4268,7 @@ void msImageProcessor::NewOptimizedFilter2(float sigmaS, float sigmaR)
 
 			// Increment iteration count
 			iterationCount++;
-			
+
 		}
 
 		// if a mode was not associated with this data point
@@ -4278,14 +4278,14 @@ void msImageProcessor::NewOptimizedFilter2(float sigmaS, float sigmaR)
 			// Shift window location
 			for(j = 0; j < lN; j++)
 				yk[j] += Mh[j];
-			
+
 			// update mode table for this data point
 			// indicating that a mode has been associated
 			// with it
 			modeTable[i] = 1;
 
 		}
-		
+
       for (k=0; k<N; k++)
          yk[k+2] *= sigmaR;
 
@@ -4315,14 +4315,14 @@ void msImageProcessor::NewOptimizedFilter2(float sigmaS, float sigmaR)
 		percent_complete = (float)(i/(float)(L))*100;
 		msSys.Prompt("\r%2d%%", (int)(percent_complete + 0.5));
 #endif
-	
+
 #ifdef USE_MSSYS_PROGRESS
 		// Check to see if the algorithm has been halted
 		if((i%PROGRESS_RATE == 0)&&((ErrorStatus = msSys.Progress((float)(i/(float)(L))*(float)(0.8)))) == EL_HALT)
-			break;		
+			break;
 #endif
 	}
-	
+
 	// Prompt user that filtering is completed
 #ifdef PROMPT
 #ifdef SHOW_PROGRESS
@@ -4337,7 +4337,7 @@ void msImageProcessor::NewOptimizedFilter2(float sigmaS, float sigmaR)
 
 	delete [] yk;
 	delete [] Mh;
-	
+
 	// done.
 	return;
 
@@ -4349,7 +4349,7 @@ void msImageProcessor::NewNonOptimizedFilter(float sigmaS, float sigmaR)
 	// Declare Variables
 	int   iterationCount, i, j, k;
 	double mvAbs, diff, el;
-	
+
 	//make sure that a lattice height and width have
 	//been defined...
 	if(!height)
@@ -4364,16 +4364,16 @@ void msImageProcessor::NewNonOptimizedFilter(float sigmaS, float sigmaR)
 		ErrorHandler("msImageProcessor", "Segment", "sigmaS and/or sigmaR is zero or negative.");
 		return;
 	}
-	
+
 	//define input data dimension with lattice
 	int lN	= N + 2;
-	
+
 	// Traverse each data point applying mean shift
 	// to each data point
-	
+
 	// Allcocate memory for yk
 	double	*yk		= new double [lN];
-	
+
 	// Allocate memory for Mh
 	double	*Mh		= new double [lN];
 
@@ -4474,7 +4474,7 @@ void msImageProcessor::NewNonOptimizedFilter(float sigmaS, float sigmaR)
    double wsuml, weight;
    double hiLTr = 80.0/sigmaR;
    // done indexing/hashing
-	
+
 	// proceed ...
 #ifdef PROMPT
 	msSys.Prompt("done.\nApplying mean shift (Using Lattice)... ");
@@ -4492,7 +4492,7 @@ void msImageProcessor::NewNonOptimizedFilter(float sigmaS, float sigmaR)
       idxs = i*lN;
       for (j=0; j<lN; j++)
          yk[j] = sdata[idxs+j];
-		
+
 		// Calculate the mean shift vector using the lattice
 		// LatticeMSVector(Mh, yk);
       /*****************************************************/
@@ -4557,26 +4557,26 @@ void msImageProcessor::NewNonOptimizedFilter(float sigmaS, float sigmaR)
    			Mh[j] = 0;
    	}
       /*****************************************************/
-		
+
 		// Calculate its magnitude squared
 		mvAbs = 0;
 		for(j = 0; j < lN; j++)
 			mvAbs += Mh[j]*Mh[j];
-		
+
 		// Keep shifting window center until the magnitude squared of the
 		// mean shift vector calculated at the window center location is
 		// under a specified threshold (Epsilon)
-		
+
 		// NOTE: iteration count is for speed up purposes only - it
 		//       does not have any theoretical importance
 		iterationCount = 1;
 		while((mvAbs >= EPSILON)&&(iterationCount < LIMIT))
 		{
-			
+
 			// Shift window location
 			for(j = 0; j < lN; j++)
 				yk[j] += Mh[j];
-			
+
 			// Calculate the mean shift vector at the new
 			// window location using lattice
 			// LatticeMSVector(Mh, yk);
@@ -4603,7 +4603,7 @@ void msImageProcessor::NewNonOptimizedFilter(float sigmaS, float sigmaR)
                diff = el*el;
                el = sdata[idxs+1]-yk[1];
                diff += el*el;
-               
+
                if (diff < 1.0)
                {
                   el = sdata[idxs+2]-yk[2];
@@ -4611,7 +4611,7 @@ void msImageProcessor::NewNonOptimizedFilter(float sigmaS, float sigmaR)
                      diff = 4*el*el;
                   else
                      diff = el*el;
-                  
+
                   if (N>1)
                   {
                      el = sdata[idxs+3]-yk[3];
@@ -4619,7 +4619,7 @@ void msImageProcessor::NewNonOptimizedFilter(float sigmaS, float sigmaR)
                      el = sdata[idxs+4]-yk[4];
                      diff += el*el;
                   }
-                  
+
                   if (diff < 1.0)
                   {
                      weight = 1-weightMap[idxd];
@@ -4642,7 +4642,7 @@ void msImageProcessor::NewNonOptimizedFilter(float sigmaS, float sigmaR)
                Mh[j] = 0;
          }
          /*****************************************************/
-			
+
 			// Calculate its magnitude squared
 			//mvAbs = 0;
 			//for(j = 0; j < lN; j++)
@@ -4660,7 +4660,7 @@ void msImageProcessor::NewNonOptimizedFilter(float sigmaS, float sigmaR)
 		// Shift window location
 		for(j = 0; j < lN; j++)
 			yk[j] += Mh[j];
-		
+
 		//store result into msRawData...
 		for(j = 0; j < N; j++)
 			msRawData[N*i+j] = (float)(yk[j+2]*sigmaR);
@@ -4670,14 +4670,14 @@ void msImageProcessor::NewNonOptimizedFilter(float sigmaS, float sigmaR)
 		percent_complete = (float)(i/(float)(L))*100;
 		msSys.Prompt("\r%2d%%", (int)(percent_complete + 0.5));
 #endif
-	
+
 #ifdef USE_MSSYS_PROGRESS
 		// Check to see if the algorithm has been halted
 		if((i%PROGRESS_RATE == 0)&&((ErrorStatus = msSys.Progress((float)(i/(float)(L))*(float)(0.8)))) == EL_HALT)
 			break;
 #endif
 	}
-	
+
 	// Prompt user that filtering is completed
 #ifdef PROMPT
 #ifdef SHOW_PROGRESS
@@ -4685,7 +4685,7 @@ void msImageProcessor::NewNonOptimizedFilter(float sigmaS, float sigmaR)
 #endif
 	msSys.Prompt("done.");
 #endif
-	
+
 	// de-allocate memory
    delete [] buckets;
    delete [] slist;
