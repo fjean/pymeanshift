@@ -46,7 +46,7 @@ static PyObject* segment(PyObject* self, PyObject* args)
   float* tmpModes = NULL;
   int* tmpModePointCounts = NULL;
   int nbRegions;
-  int dimensions[3];
+  npy_intp dimensions[3];
   int nbDimensions;
   
   if (!PyArg_ParseTuple(args, "OidI|I", &array, &radiusS, &radiusR, &minDensity, &speedUp))
@@ -106,14 +106,14 @@ static PyObject* segment(PyObject* self, PyObject* args)
   }
     
   // Create output images
-  segmentedImage = (PyArrayObject *) PyArray_FromDims(nbDimensions, dimensions, PyArray_UBYTE);
+  segmentedImage = (PyArrayObject *) PyArray_SimpleNew(nbDimensions, dimensions, PyArray_UBYTE);
   if(!segmentedImage)
   {
     Py_DECREF(inputImage);
     return NULL;  
   }
 
-  labelImage = (PyArrayObject *) PyArray_FromDims(2, dimensions, PyArray_INT);
+  labelImage = (PyArrayObject *) PyArray_SimpleNew(2, dimensions, PyArray_INT);
   if(!labelImage)
     return NULL;  
     
