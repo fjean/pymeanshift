@@ -20,8 +20,10 @@
 #include <Python.h>
 #include <numpy/arrayobject.h>
 #include <cstring>
+#include <string>
 
 #include "msImageProcessor.h"
+#include "tdef.h"
 
 
 // ***************************************************************************
@@ -39,19 +41,22 @@ static PyObject* segment(PyObject* self, PyObject* args)
   double radiusR[1];
   unsigned int minDensity[1];
   unsigned int speedUp[1] = { HIGH_SPEEDUP };
-
+  char *sKernel;
+  char *rKernel;
+  kernelType sk, rk;
   msImageProcessor imageSegmenter;
-  SpeedUpLevel speedUpLevel;    
+  SpeedUpLevel speedUpLevel;
   int* tmpLabels = NULL;
   float* tmpModes = NULL;
   int* tmpModePointCounts = NULL;
   int nbRegions;
   npy_intp dimensions[3];
   int nbDimensions;
-  
-  if (!PyArg_ParseTuple(args, "OidI|I", &array, &radiusS, &radiusR, &minDensity, &speedUp))
+  if (!PyArg_ParseTuple(args, "OidIss|I", &array, &radiusS, &radiusR, &minDensity, &sKernel, &rKernel, &speedUp))
     return NULL;
-  
+  std::string s_kernel(sKernel);
+  std::string r_kernel(rKernel);
+
   if(radiusS[0] < 0)
   {
     PyErr_SetString(PyExc_ValueError, "Spatial radius must be greater or equal to zero");
@@ -69,18 +74,35 @@ static PyObject* segment(PyObject* self, PyObject* args)
       PyErr_SetString(PyExc_ValueError, "Minimum density must be greater or equal to zero");
       return NULL;
   }
-    
+
   if(speedUp[0] > 2)
   {
     PyErr_SetString(PyExc_ValueError, "Speedup level must be 0 (no speedup), 1 (medium speedup), or 2 (high speedup)");
     return NULL;
   }
-    
-  // Get ndarray object having 8 unsigned bits per element (uchar) and 
+
+  if (s_kernel.compare("Uniform")) {
+    sk = Uniform;
+  } else if (s_kernel.compare("Gaussian")) {
+    sk = Gaussian;
+  } else {
+    PyErr_SetString(PyExc_ValueError, "Bad kernel chosen");
+    return NULL;
+  }
+  if (r_kernel.compare("Uniform")) {
+    rk = Uniform;
+  } else if (r_kernel.compare("Gaussian")) {
+    rk = Gaussian;
+  } else {
+    PyErr_SetString(PyExc_ValueError, "Bad kernel chosen");
+    return NULL;
+  }
+
+  // Get ndarray object having 8 unsigned bits per element (uchar) and
   inputImage = PyArray_FROM_OTF(array, NPY_UBYTE, NPY_IN_ARRAY);
   if(inputImage == NULL)
     return NULL;
-    
+
   // Check that the array is 2 dimentional (gray scale image) or 3 dimensional (RGB color image),
   // and initialize segmenter
   if(PyArray_NDIM(inputImage) == 2)
@@ -88,15 +110,15 @@ static PyObject* segment(PyObject* self, PyObject* args)
     nbDimensions = 2;
     dimensions[0] = PyArray_DIM(inputImage, 0);
     dimensions[1] = PyArray_DIM(inputImage, 1);
-    imageSegmenter.DefineImage((unsigned char*)PyArray_DATA(inputImage), GRAYSCALE, dimensions[0], dimensions[1]);
+    imageSegmenter.DefineImage((unsigned char*)PyArray_DATA(inputImage), GRAYSCALE, dimensions[0], dimensions[1], sk, rk);
   }
   else if(PyArray_NDIM(inputImage) == 3)
   {
     nbDimensions = 3;
     dimensions[0] = PyArray_DIM(inputImage, 0);
-    dimensions[1] = PyArray_DIM(inputImage, 1);      
+    dimensions[1] = PyArray_DIM(inputImage, 1);
     dimensions[2] = 3;
-    imageSegmenter.DefineImage((unsigned char*)PyArray_DATA(inputImage), COLOR, dimensions[0], dimensions[1]);
+    imageSegmenter.DefineImage((unsigned char*)PyArray_DATA(inputImage), COLOR, dimensions[0], dimensions[1], sk, rk);
   }
   else
   {
@@ -104,19 +126,19 @@ static PyObject* segment(PyObject* self, PyObject* args)
     PyErr_SetString(PyExc_ValueError, "Array must be 2 dimentional (gray scale image) or 3 dimensional (RGB color image)");
     return NULL;
   }
-    
+
   // Create output images
   segmentedImage = (PyArrayObject *) PyArray_SimpleNew(nbDimensions, dimensions, PyArray_UBYTE);
   if(!segmentedImage)
   {
     Py_DECREF(inputImage);
-    return NULL;  
+    return NULL;
   }
 
   labelImage = (PyArrayObject *) PyArray_SimpleNew(2, dimensions, PyArray_INT);
   if(!labelImage)
-    return NULL;  
-    
+    return NULL;
+
   // Set speedup level
   switch(speedUp[0])
   {
@@ -128,27 +150,27 @@ static PyObject* segment(PyObject* self, PyObject* args)
       break;
     case 2:
       speedUpLevel = HIGH_SPEEDUP;
-      break;      
+      break;
     default:
       speedUpLevel = HIGH_SPEEDUP;
   }
-    
+
   // Segment image and get segmented image
   imageSegmenter.Segment(radiusS[0], radiusR[0], minDensity[0], speedUpLevel);
   imageSegmenter.GetResults((unsigned char*)PyArray_DATA(segmentedImage));
-    
+
   // Get labels images and number of regions
   nbRegions = imageSegmenter.GetRegions( &tmpLabels, &tmpModes, &tmpModePointCounts);
   memcpy((int*)PyArray_DATA(labelImage), tmpLabels, dimensions[0]*dimensions[1]*sizeof(int));
-        
+
   // Cleanup
   Py_DECREF(inputImage);
   delete [] tmpLabels;
   delete [] tmpModes;
-  delete [] tmpModePointCounts;    
-    
+  delete [] tmpModePointCounts;
+
   // Return a tuple with the segmented image, the label image, and the number of regions
-  return Py_BuildValue("(NNi)", PyArray_Return(segmentedImage), PyArray_Return(labelImage), nbRegions) ;    
+  return Py_BuildValue("(NNi)", PyArray_Return(segmentedImage), PyArray_Return(labelImage), nbRegions) ;
 }
 
 
@@ -220,7 +242,7 @@ PyMODINIT_FUNC init_pymeanshift()
   PyModule_AddIntConstant(modulePMS, "SPEEDUP_MEDIUM", MED_SPEEDUP);
   PyModule_AddIntConstant(modulePMS, "SPEEDUP_HIGH", HIGH_SPEEDUP);
   import_array();
-}  
+}
 
 #else
 
